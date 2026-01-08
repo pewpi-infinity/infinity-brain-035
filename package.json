@@ -1,0 +1,33 @@
+{
+  "name": "infinity-brain-035",
+  "version": "1.0.0",
+  "description": "Infinity Brain Node 035 (007 Edition) - Part of pewpi-infinity distributed brain network",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pewpi-infinity/infinity-brain-035.git"
+  },
+  "keywords": [
+    "infinity",
+    "brain",
+    "distributed",
+    "pewpi",
+    "blockchain",
+    "wallet",
+    "auth"
+  ],
+  "author": "pewpi-infinity",
+  "license": "ISC",
+  "dependencies": {
+    "dexie": "^3.2.4",
+    "crypto-js": "^4.2.0"
+  },
+  "devDependencies": {},
+  "bugs": {
+    "url": "https://github.com/pewpi-infinity/infinity-brain-035/issues"
+  },
+  "homepage": "https://github.com/pewpi-infinity/infinity-brain-035#readme"
+}
