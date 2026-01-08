@@ -166,7 +166,16 @@ class TokenService {
    * @returns {string} - Token ID
    */
   _generateTokenId() {
-    return `tok_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // Use crypto random if available for better security
+    let randomPart;
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const array = new Uint8Array(8);
+      crypto.getRandomValues(array);
+      randomPart = Array.from(array, byte => byte.toString(36)).join('');
+    } else {
+      randomPart = Math.random().toString(36).substring(2, 15);
+    }
+    return `tok_${Date.now()}_${randomPart}`;
   }
 
   /**

@@ -316,15 +316,20 @@
   // Auto-initialize in browser if desired
   if (typeof document !== 'undefined') {
     // Wait for DOM ready
+    const initWhenReady = async () => {
+      await autoLoad();
+      // Auto-initialize can be enabled via data attribute
+      const autoInit = document.querySelector('script[data-pewpi-auto-init="true"]');
+      if (autoInit) {
+        await initialize();
+      }
+    };
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', async () => {
-        await autoLoad();
-        // Auto-initialize can be enabled via data attribute
-        const autoInit = document.querySelector('script[data-pewpi-auto-init="true"]');
-        if (autoInit) {
-          await initialize();
-        }
-      });
+      document.addEventListener('DOMContentLoaded', initWhenReady);
+    } else {
+      // DOM is already ready, execute immediately
+      initWhenReady();
     }
   }
 

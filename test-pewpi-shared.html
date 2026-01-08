@@ -132,14 +132,14 @@
     </div>
   </div>
 
-  <!-- Load pewpi-shared services -->
-  <script src="src/pewpi-shared/token-service.js"></script>
-  <script src="src/pewpi-shared/auth-service.js"></script>
-  <script src="src/pewpi-shared/wallet-unified.js"></script>
-  <script src="src/pewpi-shared/integration-listener.js"></script>
-  <script src="src/pewpi-shared/machines/adapter.js"></script>
-  <script src="src/pewpi-shared/ui-shim.js"></script>
-  <script src="src/pewpi-shared/index-shim.js"></script>
+  <!-- Load pewpi-shared services asynchronously -->
+  <script src="src/pewpi-shared/token-service.js" async></script>
+  <script src="src/pewpi-shared/auth-service.js" async></script>
+  <script src="src/pewpi-shared/wallet-unified.js" async></script>
+  <script src="src/pewpi-shared/integration-listener.js" async></script>
+  <script src="src/pewpi-shared/machines/adapter.js" async></script>
+  <script src="src/pewpi-shared/ui-shim.js" async></script>
+  <script src="src/pewpi-shared/index-shim.js" defer></script>
 
   <script>
     // Initialize pewpi-shared
