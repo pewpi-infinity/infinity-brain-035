@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pewpi-shared Test - Infinity Brain 035</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0b0b0b;
+      color: #e6e6e6;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #00e5ff;
+      margin-bottom: 0.5rem;
+    }
+    .section {
+      background: #1a1a1a;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+    .section h2 {
+      color: #00e5ff;
+      margin-top: 0;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .status.success { background: #10b981; color: white; }
+    .status.error { background: #ef4444; color: white; }
+    .status.pending { background: #f59e0b; color: white; }
+    pre {
+      background: #000;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 5px;
+      transition: all 0.2s ease;
+    }
+    button.primary {
+      background: #0ea5e9;
+      color: white;
+    }
+    button.primary:hover {
+      background: #0284c7;
+    }
+    button.secondary {
+      background: #6b7280;
+      color: white;
+    }
+    button.secondary:hover {
+      background: #4b5563;
+    }
+    .test-result {
+      margin: 10px 0;
+      padding: 10px;
+      background: #000;
+      border-left: 4px solid #00e5ff;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .test-result.error {
+      border-left-color: #ef4444;
+    }
+    .infinity {
+      color: #00e5ff;
+      font-size: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><span class="infinity">∞</span> pewpi-shared Integration Test</h1>
+    <p>Infinity Brain Node 035 - Testing pewpi-shared library</p>
+
+    <div class="section">
+      <h2>Initialization Status</h2>
+      <div id="init-status">
+        <span class="status pending">Pending</span>
+      </div>
+      <pre id="init-log"></pre>
+    </div>
+
+    <div class="section">
+      <h2>Service Tests</h2>
+      <div>
+        <button class="primary" onclick="testTokenService()">Test Token Service</button>
+        <button class="primary" onclick="testAuthService()">Test Auth Service</button>
+        <button class="primary" onclick="testWalletService()">Test Wallet Service</button>
+        <button class="primary" onclick="testIntegrationListener()">Test Integration Listener</button>
+        <button class="primary" onclick="testMachinesAdapter()">Test Machines Adapter</button>
+        <button class="primary" onclick="testUIShim()">Test UI Shim</button>
+      </div>
+      <div id="test-results"></div>
+    </div>
+
+    <div class="section">
+      <h2>Service Status</h2>
+      <pre id="status-display"></pre>
+      <button class="secondary" onclick="updateStatus()">Refresh Status</button>
+    </div>
+
+    <div class="section">
+      <h2>Interactive Demo</h2>
+      <div>
+        <button class="primary" onclick="demoAuthentication()">Demo: Authentication</button>
+        <button class="primary" onclick="demoWalletConnect()">Demo: Wallet Connect</button>
+        <button class="primary" onclick="demoNotifications()">Demo: Notifications</button>
+      </div>
+      <div id="demo-output"></div>
+    </div>
+  </div>
+
+  <!-- Load pewpi-shared services asynchronously -->
+  <script src="src/pewpi-shared/token-service.js" async></script>
+  <script src="src/pewpi-shared/auth-service.js" async></script>
+  <script src="src/pewpi-shared/wallet-unified.js" async></script>
+  <script src="src/pewpi-shared/integration-listener.js" async></script>
+  <script src="src/pewpi-shared/machines/adapter.js" async></script>
+  <script src="src/pewpi-shared/ui-shim.js" async></script>
+  <script src="src/pewpi-shared/index-shim.js" defer></script>
+
+  <script>
+    // Initialize pewpi-shared
+    const initLog = document.getElementById('init-log');
+    const initStatus = document.getElementById('init-status');
+    const testResults = document.getElementById('test-results');
+    const statusDisplay = document.getElementById('status-display');
+    const demoOutput = document.getElementById('demo-output');
+
+    let servicesReady = false;
+
+    // Override console.log to capture initialization logs
+    const originalLog = console.log;
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      if (args[0] && args[0].includes('[pewpi-shared]')) {
+        initLog.textContent += args.join(' ') + '\n';
+      }
+    };
+
+    // Initialize
+    PewpiShared.initialize().then(success => {
+      if (success) {
+        initStatus.innerHTML = '<span class="status success">✓ Initialized</span>';
+        servicesReady = true;
+        updateStatus();
+      } else {
+        initStatus.innerHTML = '<span class="status error">✗ Failed</span>';
+      }
+    }).catch(error => {
+      initStatus.innerHTML = '<span class="status error">✗ Error</span>';
+      initLog.textContent += '\nError: ' + error.message;
+    });
+
+    // Helper function to add test result
+    function addTestResult(message, isError = false) {
+      const div = document.createElement('div');
+      div.className = 'test-result' + (isError ? ' error' : '');
+      div.textContent = message;
+      testResults.appendChild(div);
+    }
+
+    // Test Token Service
+    function testTokenService() {
+      try {
+        const service = PewpiShared.services.tokenService;
+        const token = service.createToken('test', { data: 'test-data' });
+        addTestResult(`✓ Token Service: Created token ${token.id}`);
+        
+        const isValid = service.validateToken(token.id);
+        addTestResult(`✓ Token Service: Token validation = ${isValid}`);
+      } catch (error) {
+        addTestResult(`✗ Token Service: ${error.message}`, true);
+      }
+    }
+
+    // Test Auth Service
+    async function testAuthService() {
+      try {
+        const service = PewpiShared.services.authService;
+        const result = await service.authenticate(
+          'test@pewpi.com',
+          'testpassword123',
+          'password'
+        );
+        
+        if (result.success) {
+          addTestResult(`✓ Auth Service: Authenticated user ${result.user.id}`);
+          addTestResult(`✓ Auth Service: Session token ${result.sessionToken.id}`);
+        } else {
+          addTestResult(`✗ Auth Service: ${result.error}`, true);
+        }
+      } catch (error) {
+        addTestResult(`✗ Auth Service: ${error.message}`, true);
+      }
+    }
+
+    // Test Wallet Service
+    async function testWalletService() {
+      try {
+        const service = PewpiShared.services.walletUnified;
+        const result = await service.connect('Generic');
+        
+        if (result.success) {
+          addTestResult(`✓ Wallet Service: Connected ${result.wallet.address}`);
+          addTestResult(`✓ Wallet Service: Balance = ${result.wallet.balance}`);
+        } else {
+          addTestResult(`✗ Wallet Service: ${result.error}`, true);
+        }
+      } catch (error) {
+        addTestResult(`✗ Wallet Service: ${error.message}`, true);
+      }
+    }
+
+    // Test Integration Listener
+    async function testIntegrationListener() {
+      try {
+        const service = PewpiShared.services.integrationListener;
+        
+        let eventReceived = false;
+        service.on('test:event', (data) => {
+          eventReceived = true;
+          addTestResult(`✓ Integration Listener: Received event with data: ${data.message}`);
+        });
+        
+        await service.emit('test:event', { message: 'Hello pewpi!' });
+        
+        if (eventReceived) {
+          addTestResult('✓ Integration Listener: Event system working');
+        }
+      } catch (error) {
+        addTestResult(`✗ Integration Listener: ${error.message}`, true);
+      }
+    }
+
+    // Test Machines Adapter
+    async function testMachinesAdapter() {
+      try {
+        const service = PewpiShared.services.machinesAdapter;
+        
+        service.registerMachine('testMachine', {
+          name: 'Test Machine',
+          initialState: 'idle',
+          states: {
+            idle: { on: { START: 'running' } },
+            running: { on: { STOP: 'idle' } }
+          }
+        });
+        
+        addTestResult('✓ Machines Adapter: Machine registered');
+        
+        const result = await service.transition('testMachine', 'START');
+        if (result.success) {
+          addTestResult(`✓ Machines Adapter: Transitioned to ${result.currentState}`);
+        }
+      } catch (error) {
+        addTestResult(`✗ Machines Adapter: ${error.message}`, true);
+      }
+    }
+
+    // Test UI Shim
+    function testUIShim() {
+      try {
+        const service = PewpiShared.services.uiShim;
+        
+        service.notify('Test notification', 'info', 2000);
+        addTestResult('✓ UI Shim: Notification displayed');
+        
+        const button = service.createButton({
+          label: 'Test Button',
+          variant: 'primary',
+          onClick: () => addTestResult('✓ UI Shim: Button clicked')
+        });
+        
+        if (button) {
+          addTestResult('✓ UI Shim: Button created');
+        }
+      } catch (error) {
+        addTestResult(`✗ UI Shim: ${error.message}`, true);
+      }
+    }
+
+    // Update status display
+    function updateStatus() {
+      const status = PewpiShared.getStatus();
+      statusDisplay.textContent = JSON.stringify(status, null, 2);
+    }
+
+    // Demo: Authentication
+    async function demoAuthentication() {
+      demoOutput.innerHTML = '<h3>Authentication Demo</h3>';
+      
+      const auth = PewpiShared.services.authService;
+      const result = await auth.authenticate(
+        'demo@pewpi.com',
+        'demodemo123',
+        'password'
+      );
+      
+      if (result.success) {
+        demoOutput.innerHTML += `<p>✓ Authenticated as: ${result.user.identifier}</p>`;
+        demoOutput.innerHTML += `<p>User ID: ${result.user.id}</p>`;
+        demoOutput.innerHTML += `<p>Session Token: ${result.sessionToken.id}</p>`;
+        
+        PewpiShared.services.uiShim.notify('Authentication successful!', 'success');
+      }
+    }
+
+    // Demo: Wallet Connect
+    async function demoWalletConnect() {
+      demoOutput.innerHTML = '<h3>Wallet Connect Demo</h3>';
+      
+      const wallet = PewpiShared.services.walletUnified;
+      const result = await wallet.connect('Generic');
+      
+      if (result.success) {
+        demoOutput.innerHTML += `<p>✓ Wallet Connected</p>`;
+        demoOutput.innerHTML += `<p>Address: ${result.wallet.address}</p>`;
+        demoOutput.innerHTML += `<p>Balance: ${result.wallet.balance.toFixed(4)}</p>`;
+        
+        PewpiShared.services.uiShim.notify('Wallet connected!', 'success');
+      }
+    }
+
+    // Demo: Notifications
+    function demoNotifications() {
+      const ui = PewpiShared.services.uiShim;
+      
+      ui.notify('Info notification', 'info', 2000);
+      setTimeout(() => ui.notify('Success notification', 'success', 2000), 500);
+      setTimeout(() => ui.notify('Warning notification', 'warning', 2000), 1000);
+      setTimeout(() => ui.notify('Error notification', 'error', 2000), 1500);
+      
+      demoOutput.innerHTML = '<h3>Notifications Demo</h3><p>Check the top-right corner for notifications!</p>';
+    }
+  </script>
+</body>
+</html>
